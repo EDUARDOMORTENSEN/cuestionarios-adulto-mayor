@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ===== BARRA DE NAVEGACIÓN ===== -->
+<nav>
+    <div class="nav-brand">🏥 Sistema de Cuestionarios</div>
+    <div class="nav-right">
+        <span id="navNombre">—</span>
+        <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+</nav>
+
+<!-- ===== PESTAÑAS ===== -->
+<div class="tab-bar">
+    <button class="tab active" onclick="cambiarTab('p-cuestionarios', this)">📋 Cuestionarios</button>
+    <button class="tab"        onclick="cambiarTab('p-resultados', this)">📊 Resultados</button>
+</div>
+
+<!-- ===== CONTENIDO ===== -->
+<div class="page">
+
+    <!-- ── PANEL: CUESTIONARIOS ── -->
+    <div class="panel active" id="p-cuestionarios">
+
+        <div class="card">
+            <h2>Nueva Actividad</h2>
+
+            <label>Título de la actividad</label>
+            <input type="text" id="titulo" placeholder="Ej: Estimulación Cognitiva — Mayo 2026">
+
+            <label>Enlace del video (YouTube embed)</label>
+            <input type="url" id="videoUrl" placeholder="https://www.youtube.com/embed/...">
+            <small style="color:#999; font-size:16px; display:block; margin-top:6px;">
+                En YouTube → Compartir → Insertar → copie solo la URL del <code>src</code>
+            </small>
+
+            <h3>1. Preguntas ANTES del video</h3>
+            <div id="preguntas-antes"></div>
+            <button class="btn btn-green" style="margin-top:14px"
+                    onclick="addPregunta('preguntas-antes')">+ Agregar pregunta</button>
+
+            <h3>2. Preguntas DESPUÉS del video</h3>
+            <div id="preguntas-despues"></div>
+            <button class="btn btn-green" style="margin-top:14px"
+                    onclick="addPregunta('preguntas-despues')">+ Agregar pregunta</button>
+
+            <button class="btn-save" onclick="guardarCuestionario()">💾 Guardar y generar enlace</button>
+
+            <!-- Enlace generado -->
+            <div class="link-box" id="linkBox">
+                <p>✅ Cuestionario publicado. Comparte este enlace con los participantes:</p>
+                <div class="link-row">
+                    <input class="link-input" id="linkGenerado" readonly onclick="this.select()">
+                    <button class="btn-copy" onclick="copiarLink()">📋 Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de cuestionarios -->
+        <div class="card">
+            <h2>Cuestionarios creados</h2>
+            <button class="btn btn-blue" onclick="cargarListaCuestionarios()"
+                    style="margin-bottom:16px">🔄 Actualizar lista</button>
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Enlace</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-cuestionarios"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PANEL: RESULTADOS ── -->
+    <div class="panel" id="p-resultados">
+        <div class="card">
+            <h2>Resultados de los participantes</h2>
+            <button class="btn btn-blue" onclick="cargarResultados()"
+                    style="margin-bottom:16px">🔄 Actualizar</button>
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cuestionario</th>
+                            <th>Participante</th>
+                            <th>Edad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-resultados"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.page -->
+
+<!-- ===== MODAL DE RESPUESTAS ===== -->
+<div class="modal-overlay" id="modalResultados" onclick="cerrarModal(event)">
+    <div class="modal-container" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="modalTitulo">Respuestas del Participante</h3>
+            <button class="modal-close" onclick="cerrarModal(null)">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

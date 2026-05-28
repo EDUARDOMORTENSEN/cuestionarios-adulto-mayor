@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: sistema_cuestionario_db
+    restart: always
+    environment:
+      # Credenciales de acceso
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: super_password123
+      POSTGRES_DB: cuestionarios_db
+    ports:
+      # Mapeo de puertos: Puerto_Host:Puerto_Contenedor
+      - "5432:5432"
+    volumes:
+      # Para que los datos no se borren al apagar el contenedor
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad Diaria</title>
+    <link rel="stylesheet" href="css/base.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .contenedor-principal {
+            background: var(--blanco);
+            width: 90%;
+            max-width: 860px;
+            padding: 48px 44px;
+            border-radius: var(--radio-lg);
+            box-shadow: var(--sombra);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="contenedor-principal" id="pantalla-principal">
+    <h1 id="instruccion" style="font-size:var(--fs-lg); margin-bottom:28px;">Cargando actividad...</h1>
+    <div id="zona-contenido"></div>
+</div>
+
+<script>
+    /* Versión simplificada para compatibilidad con el flujo original de /api/cuestionario-activo */
+    let cuestionarioActivo     = null;
+    let respuestasRecolectadas = [];
+    let faseActual             = 'ANTES';
+    let indicePregunta         = 0;
+
+    async function cargarActividad() {
+        try {
+            const res = await fetch('/api/cuestionario-activo');
+            cuestionarioActivo = await res.json();
+            if (!cuestionarioActivo) {
+                document.getElementById('instruccion').innerText = 'No hay actividades programadas.';
+                return;
+            }
+            flujoPrincipal();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function flujoPrincipal() {
+        const preguntasData = cuestionarioActivo.preguntas;
+
+        if (faseActual === 'ANTES') {
+            if (indicePregunta < preguntasData.antes.length) {
+                mostrarPregunta(preguntasData.antes[indicePregunta]);
+            } else {
+                faseActual     = 'VIDEO';
+                indicePregunta = 0;
+                mostrarSeccionVideo();
+            }
+        } else if (faseActual === 'VIDEO') {
+            faseActual = 'DESPUES';
+            flujoPrincipal();
+        } else if (faseActual === 'DESPUES') {
+            if (indicePregunta < preguntasData.despues.length) {
+                mostrarPregunta(preguntasData.despues[indicePregunta]);
+            } else {
+                finalizarActividad();
+            }
+        }
+    }
+
+    function mostrarPregunta(p) {
+        document.getElementById('instruccion').innerText = p.texto;
+        const zona = document.getElementById('zona-contenido');
+        zona.innerHTML = p.opciones.map(opt =>
+            `<button class="opcion-btn" onclick="registrarRespuesta('${p.texto}', '${opt}')">${opt}</button>`
+        ).join('');
+    }
+
+    function registrarRespuesta(pregunta, respuesta) {
+        respuestasRecolectadas.push({ pregunta, respuesta, fase: faseActual });
+        indicePregunta++;
+        flujoPrincipal();
+    }
+
+    function mostrarSeccionVideo() {
+        document.getElementById('instruccion').innerText = 'Mire el video con atención';
+        const zona = document.getElementById('zona-contenido');
+        zona.innerHTML = `
+            <div class="video-wrap">
+                <iframe src="${cuestionarioActivo.videoUrl}" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <button class="btn-primario" onclick="flujoPrincipal()">YA TERMINÉ DE VER EL VIDEO ✔</button>
+        `;
+    }
+
+    async function finalizarActividad() {
+        document.getElementById('instruccion').innerText = 'Guardando...';
+        await fetch('/api/resultados', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                nombreUsuario: 'Adulto Mayor',
+                respuestas:    respuestasRecolectadas
+            })
+        });
+        document.getElementById('instruccion').innerText = '¡Muchas gracias!';
+        document.getElementById('zona-contenido').innerHTML = `
+            <span class="final-icono">🎉</span>
+            <p class="final-titulo">Sus respuestas han sido guardadas.</p>
+            <p class="final-sub">Ya puede cerrar esta página.</p>
+        `;
+    }
+
+    cargarActividad();
+</script>
+
+</body>
+</html>
