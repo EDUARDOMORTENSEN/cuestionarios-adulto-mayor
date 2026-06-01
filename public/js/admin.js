@@ -311,3 +311,22 @@ function toast(msg) {
 
 /* ── Inicio ─────────────────────────────────────────────────── */
 verificarAuth();
+
+/* ── Exportar CSV completo desde el admin (v4) ──────────────── */
+async function exportarCSV() {
+    const token = localStorage.getItem('admin_token');
+    const res   = await fetch('/api/resultados-admin/csv', {
+        headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) { toast('Error al exportar CSV.'); return; }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'resultados_completos.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('CSV descargado exitosamente.');
+}

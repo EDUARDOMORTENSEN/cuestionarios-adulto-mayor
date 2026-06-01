@@ -230,3 +230,184 @@ p { margin-bottom: 0.6em; }
     margin-bottom: 12px;
 }
 .instrucciones-box p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   NUEVOS ESTILOS v4 — Bienvenida, Consentimiento, Flujograma
+   ============================================================ */
+
+/* --- Bienvenida: grilla de información ─────────────────── */
+.bienvenida-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+    text-align: left;
+}
+@media (max-width: 600px) {
+    .bienvenida-info { grid-template-columns: 1fr; }
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f5f8ff;
+    border: 2px solid #c8d8f0;
+    border-radius: var(--radio);
+    padding: 18px 20px;
+}
+
+.info-icono {
+    font-size: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.info-item strong {
+    display: block;
+    font-size: var(--fs-sm);
+    color: var(--azul-oscuro);
+    margin-bottom: 6px;
+}
+
+.info-item p {
+    font-size: var(--fs-xs);
+    color: var(--texto-suave);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* --- Consentimiento ─────────────────────────────────────── */
+.consentimiento-wrap {
+    background: #fff8e1;
+    border: 3px solid #f9a825;
+    border-radius: var(--radio);
+    padding: 22px 26px;
+    margin: 24px 0 0;
+    text-align: left;
+}
+
+.consentimiento-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.consentimiento-label input[type="checkbox"] {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    accent-color: var(--verde);
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.check-texto {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--texto);
+    line-height: 1.5;
+    font-family: 'Verdana', sans-serif;
+}
+
+.error-consentimiento {
+    color: var(--rojo);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #fdecea;
+    border-radius: 8px;
+    border-left: 4px solid var(--rojo);
+}
+
+/* --- Flujograma ─────────────────────────────────────────── */
+.flujo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.flujo-paso {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    background: #f5f8ff;
+    border: 2px solid #c8d8f0;
+    border-radius: var(--radio);
+    padding: 16px 22px;
+}
+
+.flujo-activo {
+    background: #e3f0ff;
+    border-color: var(--azul-principal);
+    border-width: 3px;
+    box-shadow: 0 0 0 4px rgba(26,86,160,0.12);
+}
+
+.flujo-inicio, .flujo-fin {
+    background: #e8f5e9;
+    border-color: var(--verde);
+}
+
+.flujo-pendiente {
+    background: #fafbfd;
+    border-color: #d0dae8;
+    opacity: 0.75;
+}
+
+.flujo-icono {
+    font-size: 28px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.flujo-texto {
+    text-align: left;
+}
+
+.flujo-texto strong {
+    display: block;
+    font-size: var(--fs-sm);
+    color: var(--texto);
+    margin-bottom: 2px;
+}
+
+.flujo-texto span {
+    font-size: var(--fs-xs);
+    color: var(--texto-suave);
+}
+
+.flujo-flecha {
+    font-size: 28px;
+    color: var(--azul-principal);
+    line-height: 1;
+    padding: 4px 0;
+    font-weight: 700;
+}
+
+/* --- Resumen final ──────────────────────────────────────── */
+.resumen-final {
+    background: #f0f7ff;
+    border: 2px solid #c8d8f0;
+    border-radius: var(--radio);
+    padding: 20px 28px;
+    margin-top: 24px;
+    text-align: left;
+    display: inline-block;
+    min-width: 320px;
+}
+
+.resumen-final p {
+    font-size: var(--fs-sm);
+    color: var(--texto-suave);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.resumen-final p:last-child { margin-bottom: 0; }

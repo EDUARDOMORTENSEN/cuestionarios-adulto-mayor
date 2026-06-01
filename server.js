@@ -69,10 +69,12 @@ const Cuestionario = sequelize.define('Cuestionario', {
 const Resultado = sequelize.define('Resultado', {
     id:              { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     nombreUsuario:   { type: DataTypes.STRING },
-    edad:            { type: DataTypes.INTEGER, allowNull: true }, // ◄ AGREGAR ESTA LÍNEA
+    edad:            { type: DataTypes.INTEGER, allowNull: true },
     sexo:            { type: DataTypes.STRING, allowNull: true },
     respuestas:      { type: DataTypes.JSON },
-    cuestionario_id: { type: DataTypes.INTEGER, allowNull: true }
+    cuestionario_id: { type: DataTypes.INTEGER, allowNull: true },
+    // Metadatos de sesión: tiempos y consentimiento (v4)
+    meta:            { type: DataTypes.JSON, allowNull: true }
 }, { tableName: 'resultados' });
 
 // Relaciones
@@ -230,10 +232,11 @@ app.post('/api/c/:token/responder', async (req, res) => {
 
         const resultado = await Resultado.create({
             nombreUsuario: req.body.nombreUsuario || 'Participante',
-            edad: req.body.edad,   // ◄ AGREGAR ESTA LÍNEA
-            sexo: req.body.sexo,   // ◄ AGREGAR ESTA LÍNEA
+            edad: req.body.edad,
+            sexo: req.body.sexo,
             respuestas: req.body.respuestas,
-            cuestionario_id: c.id
+            cuestionario_id: c.id,
+            meta: req.body.meta || null   // Guarda tiempos y consentimiento (v4)
         });
         res.json(resultado);
     } catch (e) {
@@ -267,3 +270,72 @@ app.delete('/api/resultados/:id', requireAdmin, async (req, res) => {
 // ============================================================
 const PORT = 3000;
 app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+
+// ============================================================
+// RUTA: EXPORTAR CSV COMPLETO — ADMIN (v4)
+// GET /api/resultados-admin/csv
+// ============================================================
+app.get('/api/resultados-admin/csv', requireAdmin, async (req, res) => {
+    try {
+        const resultados = await Resultado.findAll({
+            order: [['createdAt', 'DESC']],
+            include: [{ model: Cuestionario, attributes: ['titulo'] }]
+        });
+
+        const esc = (v) => {
+            if (v === null || v === undefined) return '';
+            const s = String(v);
+            if (s.includes(',') || s.includes('"') || s.includes('\n'))
+                return `"${s.replace(/"/g, '""')}"`;
+            return s;
+        };
+
+        const encabezados = [
+            'id', 'cuestionario', 'usuario', 'edad', 'sexo',
+            'fecha', 'hora_inicio', 'hora_fin', 'duracion',
+            'consentimiento', 'num_pregunta', 'pregunta',
+            'respuesta', 'fase', 'tiempo_respuesta_seg', 'registrado_en'
+        ];
+
+        const filas = [];
+        for (const r of resultados) {
+            const respuestas = r.respuestas || [];
+            const meta       = r.meta       || {};
+            const titulo     = r.Cuestionario ? r.Cuestionario.titulo : '';
+            const fecha      = r.createdAt ? r.createdAt.toISOString().slice(0, 10) : '';
+
+            if (respuestas.length === 0) {
+                filas.push([
+                    r.id, titulo, r.nombreUsuario, r.edad, r.sexo,
+                    meta.fecha || fecha, meta.hora_inicio || '', meta.hora_fin || '',
+                    meta.duracion || '', meta.consentimiento ? 'si' : 'no',
+                    '', '', '', '', '', fecha
+                ].map(esc).join(','));
+            } else {
+                respuestas.forEach((resp, idx) => {
+                    filas.push([
+                        r.id, titulo, r.nombreUsuario, r.edad, r.sexo,
+                        meta.fecha || fecha, meta.hora_inicio || '', meta.hora_fin || '',
+                        meta.duracion || '', meta.consentimiento ? 'si' : 'no',
+                        idx + 1,
+                        resp.pregunta  || '',
+                        resp.respuesta || '',
+                        resp.fase      || '',
+                        resp.tiempo_respuesta !== undefined ? resp.tiempo_respuesta + 's' : '',
+                        fecha
+                    ].map(esc).join(','));
+                });
+            }
+        }
+
+        const BOM     = '\uFEFF';
+        const csvBody = [encabezados.join(','), ...filas].join('\r\n');
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="resultados_completos.csv"');
+        res.send(BOM + csvBody);
+
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
