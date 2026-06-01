@@ -208,7 +208,7 @@ function mostrarBienvenida() {
                 </div>
             </div>
             <div class="info-item">
-                <span class="info-icono">⏱</span>
+    
                 <div>
                     <strong>Tiempo estimado</strong>
                     <p>Aproximadamente <strong>${minEst} minutos</strong>. Le pedimos completarla sin interrupciones.</p>
