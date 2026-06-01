@@ -194,35 +194,35 @@ function mostrarBienvenida() {
     const minEst   = Math.max(5, Math.ceil(totalP * 0.5 + 3)); // aprox
 
     app.innerHTML = `
-        <span style="font-size:72px; display:block; margin-bottom:16px;">👋</span>
+        <span style="font-size:72px; display:block; margin-bottom:16px;"></span>
         <p class="etiqueta-fase">${cuestionario.titulo}</p>
         <h1 style="font-size:var(--fs-lg); margin: 18px 0 20px;">¡Bienvenido/a a la actividad!</h1>
 
         <!-- Tarjeta de información general -->
         <div class="bienvenida-info">
             <div class="info-item">
-                <span class="info-icono">🎯</span>
+                <span class="info-icono"></span>
                 <div>
                     <strong>Objetivo</strong>
                     <p>Esta actividad busca conocer sus opiniones y percepciones antes y después de ver un video educativo.</p>
                 </div>
             </div>
             <div class="info-item">
-                <span class="info-icono">⏱️</span>
+                <span class="info-icono">⏱</span>
                 <div>
                     <strong>Tiempo estimado</strong>
                     <p>Aproximadamente <strong>${minEst} minutos</strong>. Le pedimos completarla sin interrupciones.</p>
                 </div>
             </div>
             <div class="info-item">
-                <span class="info-icono">🔒</span>
+                <span class="info-icono"></span>
                 <div>
                     <strong>Confidencialidad</strong>
                     <p>Sus respuestas son anónimas y se usarán únicamente con fines académicos o de investigación.</p>
                 </div>
             </div>
             <div class="info-item">
-                <span class="info-icono">⚠️</span>
+                <span class="info-icono"></span>
                 <div>
                     <strong>Importante</strong>
                     <p>Por favor, <strong>no cierre ni recargue</strong> esta página hasta finalizar. Sus respuestas se guardan al terminar.</p>
@@ -239,7 +239,7 @@ function mostrarBienvenida() {
                 </span>
             </label>
             <p id="errorConsentimiento" class="error-consentimiento" style="display:none;">
-                ⚠️ Debe aceptar el consentimiento para continuar.
+                 Debe aceptar el consentimiento para continuar.
             </p>
         </div>
 
@@ -293,7 +293,7 @@ function mostrarDemograficos() {
                 <label class="form-label">2. ¿Qué edad tiene?</label>
                 <input class="form-input" type="number" id="inputEdad" min="1" placeholder="Ej. 65">
                 <p id="errorEdad" style="color:var(--rojo); font-size:var(--fs-xs); display:none; margin-top:8px; font-weight:700;">
-                    ⚠️ Lo sentimos, esta actividad está dirigida a personas de 50 años en adelante.
+                    Lo sentimos, esta actividad está dirigida a personas de 50 años en adelante.
                 </p>
             </div>
 
@@ -350,7 +350,7 @@ function mostrarInstrucciones() {
         <div class="flujo-wrap">
 
             <div class="flujo-paso flujo-inicio">
-                <div class="flujo-icono">🟢</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>INICIO</strong>
                     <span>Usted ya está aquí</span>
@@ -430,8 +430,8 @@ function mostrarInstrucciones() {
         </div>
 
         <div class="instrucciones-box" style="margin-top:28px;">
-            <p>⚠️ <strong>Recuerde:</strong> No cierre ni recargue la página hasta llegar al final.</p>
-            <p>🔊 Asegúrese de tener el <strong>volumen activado</strong> antes de ver el video.</p>
+            <p><strong>Recuerde:</strong> No cierre ni recargue la página hasta llegar al final.</p>
+            <p>Asegúrese de tener el <strong>volumen activado</strong> antes de ver el video.</p>
         </div>
 
         <button class="btn-primario" onclick="avanzarFase('ANTES')">ENTENDIDO, EMPEZAR ➔</button>
@@ -556,11 +556,11 @@ function mostrarFinal() {
             Ya puede cerrar esta página de forma segura.
         </p>
         <div class="resumen-final">
-            <p>📅 Fecha: <strong>${Tiempo.fechaStr()}</strong></p>
-            <p>🕐 Inicio: <strong>${Tiempo.horaInicioStr()}</strong></p>
-            <p>🕑 Fin: <strong>${Tiempo.horaFinStr()}</strong></p>
-            <p>⏱️ Duración total: <strong>${Tiempo.duracionStr()}</strong></p>
-            <p>📝 Preguntas respondidas: <strong>${MatrizRespuestas.longitud()}</strong></p>
+            <p>Fecha: <strong>${Tiempo.fechaStr()}</strong></p>
+            <p>Inicio: <strong>${Tiempo.horaInicioStr()}</strong></p>
+            <p>Fin: <strong>${Tiempo.horaFinStr()}</strong></p>
+            <p>Duración total: <strong>${Tiempo.duracionStr()}</strong></p>
+            <p>Preguntas respondidas: <strong>${MatrizRespuestas.longitud()}</strong></p>
         </div>
     `;
 }
