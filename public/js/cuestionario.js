@@ -291,9 +291,9 @@ function mostrarDemograficos() {
 
             <div class="form-grupo">
                 <label class="form-label">2. ¿Qué edad tiene?</label>
-                <input class="form-input" type="number" id="inputEdad" min="1" placeholder="Ej. 65">
+                <input class="form-input" type="number" id="inputEdad" min="1" placeholder="Ej. 18">
                 <p id="errorEdad" style="color:var(--rojo); font-size:var(--fs-xs); display:none; margin-top:8px; font-weight:700;">
-                    Lo sentimos, esta actividad está dirigida a personas de 50 años en adelante.
+                    Lo sentimos, esta actividad está dirigida a personas de 18 años en adelante.
                 </p>
             </div>
 
@@ -323,7 +323,7 @@ function validarDemograficos() {
         alert('Por favor, complete los campos de Edad y Sexo.');
         return;
     }
-    if (edad < 50) {
+    if (edad < 18) {
         errorTxt.style.display = 'block';
         return;
     }
