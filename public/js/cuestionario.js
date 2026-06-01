@@ -526,7 +526,7 @@ async function finalizarPrueba() {
 
         if (res.ok) {
             // Generar y descargar CSV automáticamente
-            const csvContent = CSV.generar(
+           /* const csvContent = CSV.generar(
                 usuarioNombre,
                 usuarioEdad,
                 usuarioSexo,
@@ -534,7 +534,7 @@ async function finalizarPrueba() {
                 MatrizRespuestas.obtenerTodo()
             );
             const nombreCSV = `resultado_${usuarioNombre.replace(/\s+/g,'_')}_${Tiempo.fechaStr()}.csv`;
-            CSV.descargar(csvContent, nombreCSV);
+            CSV.descargar(csvContent, nombreCSV);*/
 
             mostrarFinal();
         } else {
