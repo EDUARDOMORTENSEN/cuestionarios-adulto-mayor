@@ -235,7 +235,7 @@ function mostrarBienvenida() {
             <label class="consentimiento-label" for="checkConsentimiento">
                 <input type="checkbox" id="checkConsentimiento" onchange="toggleConsentimiento()">
                 <span class="check-texto">
-                    ✔ He leído las instrucciones y acepto participar voluntariamente en esta actividad.
+                     He leído las instrucciones y acepto participar voluntariamente en esta actividad.
                 </span>
             </label>
             <p id="errorConsentimiento" class="error-consentimiento" style="display:none;">
@@ -360,7 +360,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso">
-                <div class="flujo-icono">✅</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Consentimiento</strong>
                     <span>Ya aceptado</span>
@@ -370,7 +370,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-activo">
-                <div class="flujo-icono">📋</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Leer instrucciones</strong>
                     <span>Está aquí ahora</span>
@@ -380,7 +380,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono">❓</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Preguntas iniciales</strong>
                     <span>${nAntes} pregunta${nAntes !== 1 ? 's' : ''} antes del video</span>
@@ -390,7 +390,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono">🎬</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Ver el video</strong>
                     <span>Con atención y volumen activado</span>
@@ -400,7 +400,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono">❓</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Preguntas finales</strong>
                     <span>${nDespues} pregunta${nDespues !== 1 ? 's' : ''} después del video</span>
@@ -410,7 +410,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono">💾</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>Guardar resultados</strong>
                     <span>Sus respuestas se registran</span>
@@ -420,7 +420,7 @@ function mostrarInstrucciones() {
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-fin">
-                <div class="flujo-icono">🏁</div>
+                <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>FIN</strong>
                     <span>¡Muchas gracias!</span>
@@ -548,7 +548,7 @@ async function finalizarPrueba() {
 
 function mostrarFinal() {
     app.innerHTML = `
-        <span class="final-icono">🎉</span>
+        <span class="final-icono"></span>
         <p class="final-titulo">¡Muchas gracias, ${usuarioNombre}!</p>
         <p class="final-sub">
             Sus respuestas han sido guardadas con éxito.<br>
@@ -566,7 +566,7 @@ function mostrarFinal() {
 }
 
 function mostrarError(msg) {
-    app.innerHTML = `<p class="estado-error">⚠️ ${msg}</p>`;
+    app.innerHTML = `<p class="estado-error"> ${msg}</p>`;
 }
 
 /* ── Inicio ─────────────────────────────────────────────────── */
