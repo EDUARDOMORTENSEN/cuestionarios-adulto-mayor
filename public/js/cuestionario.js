@@ -353,7 +353,7 @@ function mostrarInstrucciones() {
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>1. Resolver cuestionario</strong>
-                    <span>Está aquí ahora</span>
+                    
                 </div>
             </div>
             <div class="flujo-flecha">↓</div>
@@ -362,7 +362,7 @@ function mostrarInstrucciones() {
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong>2. Observar video</strong>
-                    <span>Está aquí ahora</span>
+                    
                 </div>
             </div>
 
@@ -372,7 +372,7 @@ function mostrarInstrucciones() {
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
                     <strong> 3. Resolver cuestionario </strong>
-                    <span>Está aquí ahora</span>
+                    
                 </div>
             </div>
 
