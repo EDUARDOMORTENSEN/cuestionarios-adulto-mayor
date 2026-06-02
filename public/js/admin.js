@@ -250,9 +250,10 @@ async function guardarCuestionario() {
     let encuesta = null;
 
     if (incluirEncuesta) {
+        const encuestaTitulo = document.getElementById('encuesta-titulo').value.trim() || 'Encuesta de Percepción';
         const likert = recopilarEncuestaItems('encuesta-likert-items');
         const abiertas = recopilarEncuestaItems('encuesta-abiertas-items');
-        encuesta = { likert, abiertas };
+        encuesta = { titulo: encuestaTitulo, likert, abiertas };
     }
 
     if (!titulo || !videoUrl) {

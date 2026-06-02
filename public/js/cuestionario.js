@@ -560,11 +560,12 @@ function mostrarFinal() {
 
 function mostrarEncuestaLikert() {
     const preguntasLikert = cuestionario.preguntas?.encuesta?.likert || [];
+    const encuestaTitulo = cuestionario.preguntas?.encuesta?.titulo || "Encuesta de Percepción del Podcast Educativo";
     app.innerHTML = `
         <p class="etiqueta-fase">Encuesta de Percepción</p>
-        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">Encuesta de Percepción del Podcast Educativo</h1>
+        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">${encuestaTitulo}</h1>
         <p style="color:var(--texto-suave); font-size:var(--fs-sm); margin-bottom:24px; text-align:left;">
-            <strong>Instucciones:</strong> Indique su nivel de acuerdo con cada afirmación.
+            <strong>Instrucciones:</strong> Indique su nivel de acuerdo con cada afirmación.
         </p>
 
         <div class="likert-leyenda">
@@ -640,9 +641,10 @@ function validarEncuestaLikert() {
 
 function mostrarEncuestaAbiertas() {
     const preguntasAbiertas = cuestionario.preguntas?.encuesta?.abiertas || [];
+    const encuestaTitulo = cuestionario.preguntas?.encuesta?.titulo || "Encuesta de Percepción del Podcast Educativo";
     app.innerHTML = `
-        <p class="etiqueta-fase">Preguntas Abiertas</p>
-        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">Encuesta de Percepción del Podcast Educativo</h1>
+        <p class="etiqueta-fase">Encuesta de Percepción</p>
+        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">${encuestaTitulo}</h1>
         <p style="color:var(--texto-suave); font-size:var(--fs-sm); margin-bottom:24px; text-align:left;">
             Escriba su respuesta en los cuadros de texto a continuación.
         </p>
