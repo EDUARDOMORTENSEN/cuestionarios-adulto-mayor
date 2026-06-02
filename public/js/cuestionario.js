@@ -204,7 +204,7 @@ function mostrarBienvenida() {
                 <span class="info-icono"></span>
                 <div>
                     <strong>Objetivo</strong>
-                    <p>Esta actividad busca conocer sus opiniones y percepciones antes y después de ver un video educativo.</p>
+                    <p>Este estudio tiene como objetivo evaluar la calidad de un video educativo.</p>
                 </div>
             </div>
             <div class="info-item">
@@ -349,21 +349,20 @@ function mostrarInstrucciones() {
         <!-- Flujograma visual -->
         <div class="flujo-wrap">
 
-            <div class="flujo-paso flujo-inicio">
+            <div class="flujo-paso flujo-activo">
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
-                    <strong>INICIO</strong>
-                    <span>Usted ya está aquí</span>
+                    <strong>1. Resolver cuestionario</strong>
+                    <span>Está aquí ahora</span>
                 </div>
             </div>
-
             <div class="flujo-flecha">↓</div>
 
-            <div class="flujo-paso">
+            <div class="flujo-paso flujo-activo">
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
-                    <strong>Consentimiento</strong>
-                    <span>Ya aceptado</span>
+                    <strong>2. Observar video</strong>
+                    <span>Está aquí ahora</span>
                 </div>
             </div>
 
@@ -372,60 +371,11 @@ function mostrarInstrucciones() {
             <div class="flujo-paso flujo-activo">
                 <div class="flujo-icono"></div>
                 <div class="flujo-texto">
-                    <strong>Leer instrucciones</strong>
+                    <strong> 3. Resolver cuestionario </strong>
                     <span>Está aquí ahora</span>
                 </div>
             </div>
 
-            <div class="flujo-flecha">↓</div>
-
-            <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono"></div>
-                <div class="flujo-texto">
-                    <strong>Preguntas iniciales</strong>
-                    <span>${nAntes} pregunta${nAntes !== 1 ? 's' : ''} antes del video</span>
-                </div>
-            </div>
-
-            <div class="flujo-flecha">↓</div>
-
-            <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono"></div>
-                <div class="flujo-texto">
-                    <strong>Ver el video</strong>
-                    <span>Con atención y volumen activado</span>
-                </div>
-            </div>
-
-            <div class="flujo-flecha">↓</div>
-
-            <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono"></div>
-                <div class="flujo-texto">
-                    <strong>Preguntas finales</strong>
-                    <span>${nDespues} pregunta${nDespues !== 1 ? 's' : ''} después del video</span>
-                </div>
-            </div>
-
-            <div class="flujo-flecha">↓</div>
-
-            <div class="flujo-paso flujo-pendiente">
-                <div class="flujo-icono"></div>
-                <div class="flujo-texto">
-                    <strong>Guardar resultados</strong>
-                    <span>Sus respuestas se registran</span>
-                </div>
-            </div>
-
-            <div class="flujo-flecha">↓</div>
-
-            <div class="flujo-paso flujo-fin">
-                <div class="flujo-icono"></div>
-                <div class="flujo-texto">
-                    <strong>FIN</strong>
-                    <span>¡Muchas gracias!</span>
-                </div>
-            </div>
 
         </div>
 
@@ -479,7 +429,7 @@ function registrar(pregunta, respuesta, faseLbl) {
 function mostrarVideo() {
     app.innerHTML = `
         <p class="etiqueta-fase">${cuestionario.titulo}</p>
-        <h1 style="font-size:var(--fs-lg); margin:14px 0 24px;">Mire el video con atención 🎬</h1>
+        <h1 style="font-size:var(--fs-lg); margin:14px 0 24px;">Observe el video con atención </h1>
         <div class="video-wrap">
             <iframe src="${cuestionario.videoUrl}" frameborder="0" allowfullscreen></iframe>
         </div>
@@ -552,7 +502,7 @@ function mostrarFinal() {
         <p class="final-titulo">¡Muchas gracias, ${usuarioNombre}!</p>
         <p class="final-sub">
             Sus respuestas han sido guardadas con éxito.<br>
-            Se ha descargado automáticamente un archivo con sus resultados.<br><br>
+            Se han guardado automáticamente un archivo con sus resultados.<br><br>
             Ya puede cerrar esta página de forma segura.
         </p>
         <div class="resumen-final">
