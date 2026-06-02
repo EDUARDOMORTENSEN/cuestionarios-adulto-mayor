@@ -411,3 +411,112 @@ p { margin-bottom: 0.6em; }
 }
 
 .resumen-final p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   ESTILOS DE LA ENCUESTA (Likert y Preguntas Abiertas)
+   ============================================================ */
+
+.likert-item {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #f7f9fc;
+    border-radius: var(--radio);
+    border: 2px solid #cdd6e8;
+    text-align: left;
+}
+.likert-pregunta {
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    margin-bottom: 16px;
+    color: var(--texto);
+    font-family: 'Verdana', sans-serif;
+}
+.likert-opciones {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+}
+.likert-label {
+    cursor: pointer;
+    position: relative;
+    flex: 1;
+    text-align: center;
+}
+.likert-label input {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+}
+.likert-radio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 3px solid var(--gris-claro);
+    background: var(--blanco);
+    color: var(--texto-suave);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    transition: all 0.2s;
+}
+.likert-label:hover .likert-radio-btn {
+    border-color: var(--azul-principal);
+    background: #dde8f8;
+}
+.likert-label input:checked + .likert-radio-btn {
+    background: var(--azul-principal);
+    border-color: var(--azul-oscuro);
+    color: var(--blanco);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(26,86,160,0.3);
+}
+.likert-leyenda {
+    background: #eaf1fb;
+    border: 2px solid #b3ccea;
+    border-radius: var(--radio);
+    padding: 18px;
+    margin-bottom: 24px;
+    text-align: left;
+    font-size: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+}
+.likert-leyenda span {
+    white-space: nowrap;
+    font-family: 'Verdana', sans-serif;
+}
+
+.abierta-item {
+    margin-bottom: 28px;
+    text-align: left;
+}
+.abierta-pregunta {
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    margin-bottom: 12px;
+    color: var(--texto);
+    font-family: 'Verdana', sans-serif;
+}
+.abierta-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border: 3px solid var(--gris-claro);
+    border-radius: var(--radio);
+    font-size: var(--fs-sm);
+    font-family: 'Verdana', sans-serif;
+    color: var(--texto);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.abierta-textarea:focus {
+    border-color: var(--azul-principal);
+    box-shadow: 0 0 0 4px rgba(26,86,160,0.15);
+}
+

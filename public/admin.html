@@ -42,15 +42,54 @@
                 En YouTube → Compartir → Insertar → copie solo la URL del <code>src</code>
             </small>
 
-            <h3>1. Preguntas ANTES del video</h3>
+            <h3>1. Preguntas del video</h3>
             <div id="preguntas-antes"></div>
-            <button class="btn btn-green" style="margin-top:14px"
-                    onclick="addPregunta('preguntas-antes')">+ Agregar pregunta</button>
+            <div style="margin-top:14px; display:flex; gap:10px;">
+                <button class="btn btn-green" onclick="addPregunta('preguntas-antes')">+ Agregar pregunta</button>
+                <label class="btn btn-blue" style="cursor:pointer; margin:0; display:inline-flex; align-items:center;">
+                    📂 Cargar desde TXT
+                    <input type="file" accept=".txt" style="display:none;" onchange="cargarPreguntasDesdeArchivo(this, 'preguntas-antes')">
+                </label>
+            </div>
 
-            <h3>2. Preguntas DESPUÉS del video</h3>
-            <div id="preguntas-despues"></div>
-            <button class="btn btn-green" style="margin-top:14px"
-                    onclick="addPregunta('preguntas-despues')">+ Agregar pregunta</button>
+            <h3 style="margin-top: 36px;">2. Preguntas DESPUÉS del video (Opcional)</h3>
+            <div style="margin: 18px 0;">
+                <label class="checkbox-container" style="display:inline-flex; align-items:center; gap:10px; font-size:18px; cursor:pointer; font-weight: bold; color: var(--texto-suave);">
+                    <input type="checkbox" id="usar-otro-despues" onchange="toggleOtroDespues(this.checked)" style="width:22px; height:22px; cursor:pointer;">
+                    <span>Usar otro cuestionario para después del video</span>
+                </label>
+            </div>
+
+            <div id="despues-config-wrap" style="display:none; padding-left:18px; border-left:4px dashed var(--azul-principal); margin-bottom: 24px;">
+                <div id="preguntas-despues"></div>
+                <div style="margin-top:14px; display:flex; gap:10px;">
+                    <button class="btn btn-green" onclick="addPregunta('preguntas-despues')">+ Agregar pregunta</button>
+                    <label class="btn btn-blue" style="cursor:pointer; margin:0; display:inline-flex; align-items:center;">
+                        📂 Cargar desde TXT
+                        <input type="file" accept=".txt" style="display:none;" onchange="cargarPreguntasDesdeArchivo(this, 'preguntas-despues')">
+                    </label>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 36px;">3. Encuesta de Percepción (Opcional)</h3>
+            <div style="margin: 18px 0;">
+                <label class="checkbox-container" style="display:inline-flex; align-items:center; gap:10px; font-size:18px; cursor:pointer; font-weight: bold; color: var(--texto-suave);">
+                    <input type="checkbox" id="incluir-encuesta" onchange="toggleEncuestaSection(this.checked)" style="width:22px; height:22px; cursor:pointer;">
+                    <span>Incluir encuesta de percepción al final de la actividad</span>
+                </label>
+            </div>
+
+            <div id="encuesta-config-wrap" style="display:none; padding-left:18px; border-left:4px dashed var(--azul-principal); margin-bottom: 24px;">
+                <h4 style="font-size:18px; margin-top:20px; color: var(--texto-suave);">Afirmaciones de la Escala Likert (1 a 5)</h4>
+                <div id="encuesta-likert-items"></div>
+                <button class="btn btn-green" style="margin-top:12px; margin-bottom:24px;"
+                        onclick="addEncuestaItem('likert')">+ Agregar afirmación Likert</button>
+
+                <h4 style="font-size:18px; margin-top:20px; color: var(--texto-suave);">Preguntas Abiertas</h4>
+                <div id="encuesta-abiertas-items"></div>
+                <button class="btn btn-green" style="margin-top:12px; margin-bottom:14px;"
+                        onclick="addEncuestaItem('abierta')">+ Agregar pregunta abierta</button>
+            </div>
 
             <button class="btn-save" onclick="guardarCuestionario()">💾 Guardar y generar enlace</button>
 

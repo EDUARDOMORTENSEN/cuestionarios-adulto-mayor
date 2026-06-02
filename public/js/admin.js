@@ -83,18 +83,192 @@ function recopilarPreguntas(contenedorId) {
     return lista;
 }
 
+/* ── Cargar preguntas desde archivo TXT ─────────────────────── */
+function parseTXT(text) {
+    const lines = text.split(/\r?\n/);
+    const preguntas = [];
+    let currentPregunta = null;
+
+    for (let line of lines) {
+        let cleanLine = line.trim();
+        if (!cleanLine) continue;
+
+        // Ignorar líneas divisorias típicas o encabezados
+        if (cleanLine.startsWith('____') || cleanLine.startsWith('----') || cleanLine.toLowerCase().startsWith('instrucciones') || cleanLine.toLowerCase().startsWith('pretest')) {
+            continue;
+        }
+
+        // Detectar si es una opción: A) o A. o B) o B. etc.
+        const optMatch = cleanLine.match(/^([A-Za-z])[\)\.]\s*(.*)$/);
+        if (optMatch) {
+            if (currentPregunta) {
+                // Limpiar la opción (quitar marca de correcto como ✅)
+                let optText = optMatch[2].replace(/✅/g, '').trim();
+                currentPregunta.opciones.push(optText);
+            }
+        } else {
+            // Es texto de pregunta. Quitar número inicial si tiene, ej: "1. ¿Cuál..." -> "¿Cuál..."
+            const qMatch = cleanLine.match(/^\d+[\.\)]\s*(.*)$/);
+            const qText = qMatch ? qMatch[1].trim() : cleanLine;
+            
+            if (qText.length > 3) {
+                currentPregunta = {
+                    texto: qText,
+                    opciones: []
+                };
+                preguntas.push(currentPregunta);
+            }
+        }
+    }
+
+    return preguntas.filter(p => p.texto && p.opciones.length > 0);
+}
+
+function cargarPreguntasDesdeArchivo(inputElement, contenedorId) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const preguntas = parseTXT(text);
+        
+        if (preguntas.length === 0) {
+            toast('⚠️ No se encontraron preguntas válidas en el formato del TXT.');
+            return;
+        }
+
+        // Vaciar el contenedor
+        const container = document.getElementById(contenedorId);
+        container.innerHTML = '';
+
+        // Añadir cada pregunta al contenedor
+        preguntas.forEach(p => {
+            contadorPreguntas++;
+            const id = `p${contadorPreguntas}`;
+            const div = document.createElement('div');
+            div.className = 'pregunta-item';
+            div.id = id;
+            div.innerHTML = `
+                <div class="pitem-head">
+                    <span>Pregunta</span>
+                    <button class="btn btn-red" onclick="document.getElementById('${id}').remove()">✕ Quitar</button>
+                </div>
+                <input type="text" class="p-texto" placeholder="Escribe la pregunta aquí" value="${p.texto.replace(/"/g, '&quot;')}">
+                <label style="font-size:16px; margin-top:12px;">Opciones de respuesta (separadas por coma)</label>
+                <input type="text" class="p-opciones" placeholder="Bien, Regular, Mal" value="${p.opciones.join(', ').replace(/"/g, '&quot;')}">
+            `;
+            container.appendChild(div);
+        });
+
+        toast(`✅ Se cargaron ${preguntas.length} preguntas correctamente.`);
+    };
+    reader.readAsText(file, 'UTF-8');
+    inputElement.value = '';
+}
+
+/* ── Encuesta de Percepción ────────────────────────────────── */
+const defaultLikert = [
+    "El contenido del podcast fue claro y fácil de comprender.",
+    "La información presentada mantuvo mi atención durante la actividad.",
+    "La explicación de los conceptos fue organizada y coherente.",
+    "El ritmo de presentación del podcast fue adecuado.",
+    "Considero que el podcast facilitó mi comprensión del tema.",
+    "Los ejemplos utilizados ayudaron a entender mejor los conceptos.",
+    "El audio y la narración fueron agradables de escuchar.",
+    "El podcast generó interés por aprender más sobre el tema.",
+    "Considero que el contenido presentado fue confiable.",
+    "Me sentiría cómodo utilizando este tipo de recurso en otros cursos.",
+    "El podcast transmitió la información de manera profesional.",
+    "Después de escuchar el podcast, considero que comprendí mejor los riesgos relacionados con la huella digital."
+];
+
+const defaultAbiertas = [
+    "¿Qué aspecto del podcast le resultó más útil para su aprendizaje?",
+    "¿Qué aspecto podría mejorarse en el podcast?",
+    "¿Hubo algún momento en que el contenido resultara confuso o poco claro? Explique.",
+    "¿Qué tan natural le pareció la narración del podcast? Explique brevemente."
+];
+
+function toggleEncuestaSection(checked) {
+    const wrap = document.getElementById('encuesta-config-wrap');
+    if (checked) {
+        wrap.style.display = 'block';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+
+function toggleOtroDespues(checked) {
+    const wrap = document.getElementById('despues-config-wrap');
+    if (checked) {
+        wrap.style.display = 'block';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+
+function addEncuestaItem(tipo, valorDefault = '') {
+    contadorPreguntas++;
+    const id = `encuesta-item-${contadorPreguntas}`;
+    const div = document.createElement('div');
+    div.className = 'pregunta-item';
+    div.id = id;
+    div.style.borderLeft = tipo === 'likert' ? '6px solid var(--azul-principal)' : '6px solid #ff9f43';
+    div.innerHTML = `
+        <div class="pitem-head">
+            <span>${tipo === 'likert' ? 'Afirmación Likert (Escala 1-5)' : 'Pregunta Abierta'}</span>
+            <button class="btn btn-red" onclick="document.getElementById('${id}').remove()">✕ Quitar</button>
+        </div>
+        <input type="text" class="encuesta-pregunta-texto" placeholder="Escribe aquí la pregunta..." value="${valorDefault.replace(/"/g, '&quot;')}">
+    `;
+    const containerId = tipo === 'likert' ? 'encuesta-likert-items' : 'encuesta-abiertas-items';
+    document.getElementById(containerId).appendChild(div);
+}
+
+function recopilarEncuestaItems(containerId) {
+    const items = document.querySelectorAll(`#${containerId} .pregunta-item`);
+    const lista = [];
+    items.forEach(item => {
+        const texto = item.querySelector('.encuesta-pregunta-texto').value.trim();
+        if (texto) {
+            lista.push(texto);
+        }
+    });
+    return lista;
+}
+
 async function guardarCuestionario() {
     const titulo    = document.getElementById('titulo').value.trim();
     const videoUrl  = document.getElementById('videoUrl').value.trim();
     const antes     = recopilarPreguntas('preguntas-antes');
-    const despues   = recopilarPreguntas('preguntas-despues');
+    
+    const usarOtroDespues = document.getElementById('usar-otro-despues').checked;
+    const despues   = usarOtroDespues ? recopilarPreguntas('preguntas-despues') : antes;
+
+    const incluirEncuesta = document.getElementById('incluir-encuesta').checked;
+    let encuesta = null;
+
+    if (incluirEncuesta) {
+        const likert = recopilarEncuestaItems('encuesta-likert-items');
+        const abiertas = recopilarEncuestaItems('encuesta-abiertas-items');
+        encuesta = { likert, abiertas };
+    }
 
     if (!titulo || !videoUrl) {
         toast('⚠️ Complete el título y la URL del video.');
         return;
     }
-    if (!antes.length && !despues.length) {
-        toast('⚠️ Agregue al menos una pregunta.');
+    if (!antes.length) {
+        toast('⚠️ Agregue al menos una pregunta en el cuestionario.');
+        return;
+    }
+    if (usarOtroDespues && !despues.length) {
+        toast('⚠️ Agregue al menos una pregunta para después del video.');
+        return;
+    }
+    if (incluirEncuesta && (!encuesta.likert.length && !encuesta.abiertas.length)) {
+        toast('⚠️ Agregue al menos una pregunta en la encuesta.');
         return;
     }
 
@@ -103,7 +277,7 @@ async function guardarCuestionario() {
         headers: headers(),
         body:    JSON.stringify({
             titulo, videoUrl,
-            preguntas: { antes, despues }
+            preguntas: { antes, despues, encuesta }
         })
     });
     const nuevo = await res.json();
@@ -235,6 +409,7 @@ function verDetalleResultado(id) {
     const respuestas = Array.isArray(registro.respuestas) ? registro.respuestas : [];
     const antes    = respuestas.filter(x => x.fase.toLowerCase() === 'antes');
     const despues  = respuestas.filter(x => x.fase.toLowerCase() === 'despues');
+    const encuesta = respuestas.filter(x => x.fase.toLowerCase() === 'encuesta');
 
     let html = `
         <div class="meta-usuario">
@@ -271,6 +446,21 @@ function verDetalleResultado(id) {
         });
     } else {
         html += `<p style="color:#999;margin:6px 0 0">No se registraron respuestas en esta fase.</p>`;
+    }
+    html += `</div>`;
+
+    // Fase ENCUESTA
+    html += `<div class="fase-seccion">
+        <span class="fase-titulo fase-encuesta">Fase 3: Encuesta de Percepción</span>`;
+    if (encuesta.length) {
+        encuesta.forEach(r => {
+            html += `<div class="res-item">
+                <div class="res-pregunta">${r.pregunta}</div>
+                <div>Respuesta: <span class="res-respuesta">${r.respuesta}</span></div>
+            </div>`;
+        });
+    } else {
+        html += `<p style="color:#999;margin:6px 0 0">No se registraron respuestas en esta encuesta.</p>`;
     }
     html += `</div>`;
 

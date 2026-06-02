@@ -1,0 +1,15 @@
+node_modules/
+.env
+
+# Archivos de prueba locales
+public/cuestionario_pretest.txt
+
+# Logs y depuración
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini

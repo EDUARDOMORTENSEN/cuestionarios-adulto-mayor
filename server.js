@@ -21,7 +21,7 @@ const sequelize = new Sequelize(urlConexion, {
     dialect: 'postgres',
     logging: false,
     // Render requiere SSL para conexiones seguras a la base de datos
-    dialectOptions: process.env.DATABASE_URL ? {
+    dialectOptions: (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1')) ? {
         ssl: {
             require: true,
             rejectUnauthorized: false // Evita problemas de certificados en Render

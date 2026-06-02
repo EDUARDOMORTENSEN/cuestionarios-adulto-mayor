@@ -339,6 +339,8 @@ tr:hover { background: #eff4ff; }
 }
 .fase-antes   { background: #fff3cd; color: #7a5c00; }
 .fase-despues { background: #d4edda; color: #155a30; }
+.fase-encuesta { background: #d1ecf1; color: #0c5460; }
+
 
 .res-item { border-bottom: 1px dashed #e0e8f0; padding: 10px 0; }
 .res-item:last-child { border-bottom: none; }

@@ -179,6 +179,35 @@ function flujo() {
             if (indicePregunta < preguntas.despues.length) {
                 mostrarPregunta(preguntas.despues[indicePregunta], preguntas.despues.length, 'DESPUES');
             } else {
+                const tieneLikert = preguntas.encuesta && preguntas.encuesta.likert && preguntas.encuesta.likert.length;
+                const tieneAbiertas = preguntas.encuesta && preguntas.encuesta.abiertas && preguntas.encuesta.abiertas.length;
+                
+                if (tieneLikert) {
+                    fase = 'ENCUESTA_LIKERT';
+                } else if (tieneAbiertas) {
+                    fase = 'ENCUESTA_ABIERTAS';
+                } else {
+                    finalizarPrueba();
+                    break;
+                }
+                indicePregunta = 0;
+                flujo();
+            }
+            break;
+        case 'ENCUESTA_LIKERT':
+            const tieneLikert = preguntas.encuesta && preguntas.encuesta.likert && preguntas.encuesta.likert.length;
+            if (tieneLikert) {
+                mostrarEncuestaLikert();
+            } else {
+                fase = 'ENCUESTA_ABIERTAS';
+                flujo();
+            }
+            break;
+        case 'ENCUESTA_ABIERTAS':
+            const tieneAbiertas = preguntas.encuesta && preguntas.encuesta.abiertas && preguntas.encuesta.abiertas.length;
+            if (tieneAbiertas) {
+                mostrarEncuestaAbiertas();
+            } else {
                 finalizarPrueba();
             }
             break;
@@ -334,10 +363,13 @@ function validarDemograficos() {
     avanzarFase('INSTRUCCIONES');
 }
 
-/* ── 3. Instrucciones como Flujograma ──────────────────────── */
 function mostrarInstrucciones() {
     const nAntes   = cuestionario.preguntas?.antes?.length  || 0;
     const nDespues = cuestionario.preguntas?.despues?.length || 0;
+    const tieneEncuesta = cuestionario.preguntas?.encuesta && (
+        (cuestionario.preguntas.encuesta.likert && cuestionario.preguntas.encuesta.likert.length) ||
+        (cuestionario.preguntas.encuesta.abiertas && cuestionario.preguntas.encuesta.abiertas.length)
+    );
 
     app.innerHTML = `
         <p class="etiqueta-fase">Instrucciones</p>
@@ -350,38 +382,49 @@ function mostrarInstrucciones() {
         <div class="flujo-wrap">
 
             <div class="flujo-paso flujo-activo">
-                <div class="flujo-icono"></div>
+                <div class="flujo-icono">📋</div>
                 <div class="flujo-texto">
-                    <strong>1. Resolver cuestionario</strong>
-                    
+                    <strong>1. Cuestionario Inicial</strong>
+                    <span>Preguntas antes de ver el video</span>
                 </div>
             </div>
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-activo">
-                <div class="flujo-icono"></div>
+                <div class="flujo-icono">🎥</div>
                 <div class="flujo-texto">
-                    <strong>2. Observar video</strong>
-                    
+                    <strong>2. Observar el video</strong>
+                    <span>Poner atención al contenido del recurso</span>
                 </div>
             </div>
 
             <div class="flujo-flecha">↓</div>
 
             <div class="flujo-paso flujo-activo">
-                <div class="flujo-icono"></div>
+                <div class="flujo-icono">📋</div>
                 <div class="flujo-texto">
-                    <strong> 3. Resolver cuestionario </strong>
-                    
+                    <strong>3. Cuestionario Final</strong>
+                    <span>Preguntas después de ver el video</span>
                 </div>
             </div>
 
+            ${tieneEncuesta ? `
+            <div class="flujo-flecha">↓</div>
+
+            <div class="flujo-paso flujo-activo">
+                <div class="flujo-icono">📝</div>
+                <div class="flujo-texto">
+                    <strong>4. Encuesta de Percepción</strong>
+                    <span>Preguntas de opinión sobre el podcast</span>
+                </div>
+            </div>
+            ` : ''}
 
         </div>
 
         <div class="instrucciones-box" style="margin-top:28px;">
             <p><strong>Recuerde:</strong> No cierre ni recargue la página hasta llegar al final.</p>
-            <p>Asegúrese de tener el <strong>volumen activado</strong> antes de ver el video.</p>
+            <p>Asegúrese de tener el <strong>volumen activado</strong> antes de escuchar/ver el video.</p>
         </div>
 
         <button class="btn-primario" onclick="avanzarFase('ANTES')">ENTENDIDO, EMPEZAR ➔</button>
@@ -401,7 +444,7 @@ function mostrarPregunta(p, total, faseLbl) {
             ${etiqueta} — Pregunta ${indicePregunta + 1} de ${total}
         </p>
         <div class="progreso-bar"><div class="progreso-fill" style="width:${pct}%"></div></div>
-        <p class="etiqueta-fase">${cuestionario.titulo}</p>
+        <p class="etiqueta-fase">Cuestionario: responda a las siguientes preguntas.</p>
         <h1 style="font-size:var(--fs-lg); margin:18px 0 30px; line-height:1.4;">${p.texto}</h1>
         <div id="opciones"></div>
     `;
@@ -513,6 +556,119 @@ function mostrarFinal() {
             <p>Preguntas respondidas: <strong>${MatrizRespuestas.longitud()}</strong></p>
         </div>
     `;
+}
+
+function mostrarEncuestaLikert() {
+    const preguntasLikert = cuestionario.preguntas?.encuesta?.likert || [];
+    app.innerHTML = `
+        <p class="etiqueta-fase">Encuesta de Percepción</p>
+        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">Encuesta de Percepción del Podcast Educativo</h1>
+        <p style="color:var(--texto-suave); font-size:var(--fs-sm); margin-bottom:24px; text-align:left;">
+            <strong>Instucciones:</strong> Indique su nivel de acuerdo con cada afirmación.
+        </p>
+
+        <div class="likert-leyenda">
+            <span><strong>1</strong>: Totalmente en desacuerdo</span>
+            <span><strong>2</strong>: En desacuerdo</span>
+            <span><strong>3</strong>: Neutral</span>
+            <span><strong>4</strong>: De acuerdo</span>
+            <span><strong>5</strong>: Totalmente de acuerdo</span>
+        </div>
+
+        <div id="likert-form" style="margin-bottom: 28px;">
+            ${preguntasLikert.map((p, idx) => `
+                <div class="likert-item" id="likert-item-${idx}">
+                    <p class="likert-pregunta">${idx + 1}. ${p}</p>
+                    <div class="likert-opciones">
+                        ${[1, 2, 3, 4, 5].map(val => `
+                            <label class="likert-label">
+                                <input type="radio" name="likert-${idx}" value="${val}">
+                                <span class="likert-radio-btn">${val}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        <button class="btn-primario" onclick="validarEncuestaLikert()">CONTINUAR ➔</button>
+    `;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validarEncuestaLikert() {
+    const preguntasLikert = cuestionario.preguntas?.encuesta?.likert || [];
+    const respuestas = [];
+    let faltantes = [];
+
+    preguntasLikert.forEach((p, idx) => {
+        const radios = document.getElementsByName(`likert-${idx}`);
+        let seleccion = null;
+        for (const radio of radios) {
+            if (radio.checked) {
+                seleccion = radio.value;
+                break;
+            }
+        }
+        if (seleccion === null) {
+            faltantes.push(idx + 1);
+            document.getElementById(`likert-item-${idx}`).style.borderColor = 'var(--rojo)';
+        } else {
+            document.getElementById(`likert-item-${idx}`).style.borderColor = '#cdd6e8';
+            respuestas.push({ pregunta: `${idx + 1}. ${p}`, respuesta: seleccion });
+        }
+    });
+
+    if (faltantes.length > 0) {
+        alert(`Por favor, responda todas las preguntas. Falta responder: ${faltantes.join(', ')}`);
+        document.getElementById(`likert-item-${faltantes[0] - 1}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Registrar en la MatrizRespuestas
+    respuestas.forEach(r => {
+        MatrizRespuestas.agregar(r.pregunta, r.respuesta, 'ENCUESTA', 0);
+    });
+
+    const tieneAbiertas = cuestionario.preguntas?.encuesta?.abiertas && cuestionario.preguntas.encuesta.abiertas.length;
+    if (tieneAbiertas) {
+        avanzarFase('ENCUESTA_ABIERTAS');
+    } else {
+        finalizarPrueba();
+    }
+}
+
+function mostrarEncuestaAbiertas() {
+    const preguntasAbiertas = cuestionario.preguntas?.encuesta?.abiertas || [];
+    app.innerHTML = `
+        <p class="etiqueta-fase">Preguntas Abiertas</p>
+        <h1 style="font-size:var(--fs-md); margin:14px 0 20px;">Encuesta de Percepción del Podcast Educativo</h1>
+        <p style="color:var(--texto-suave); font-size:var(--fs-sm); margin-bottom:24px; text-align:left;">
+            Escriba su respuesta en los cuadros de texto a continuación.
+        </p>
+
+        <div id="abiertas-form" style="margin-bottom: 28px;">
+            ${preguntasAbiertas.map((p, idx) => `
+                <div class="abierta-item">
+                    <p class="abierta-pregunta">${idx + 1}. ${p}</p>
+                    <textarea class="abierta-textarea" id="abierta-${idx}" placeholder="Escriba aquí su respuesta..."></textarea>
+                </div>
+            `).join('')}
+        </div>
+
+        <button class="btn-primario" onclick="validarEncuestaAbiertas()">GUARDAR Y FINALIZAR ✔</button>
+    `;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validarEncuestaAbiertas() {
+    const preguntasAbiertas = cuestionario.preguntas?.encuesta?.abiertas || [];
+    preguntasAbiertas.forEach((p, idx) => {
+        const val = document.getElementById(`abierta-${idx}`).value.trim() || 'Sin respuesta';
+        MatrizRespuestas.agregar(`${idx + 1}. ${p}`, val, 'ENCUESTA', 0);
+    });
+
+    finalizarPrueba();
 }
 
 function mostrarError(msg) {
