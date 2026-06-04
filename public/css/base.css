@@ -101,6 +101,7 @@ p { margin-bottom: 0.6em; }
     margin: 16px 0;
     font-size: var(--fs-md);
     font-weight: 700;
+    font-family: 'Georgia', serif;  /* ← AGREGA ESTA LÍNEA */
     color: var(--texto);
     background: #f0f4fa;
     border: 4px solid var(--gris-claro);
