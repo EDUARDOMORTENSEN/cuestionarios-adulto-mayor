@@ -445,7 +445,7 @@ function mostrarPregunta(p, total, faseLbl) {
         </p>
         <div class="progreso-bar"><div class="progreso-fill" style="width:${pct}%"></div></div>
         <p class="etiqueta-fase">Cuestionario: responda a las siguientes preguntas.</p>
-        <h1 style="font-size:var(--fs-lg); margin:18px 0 30px; line-height:1.4;">${p.texto}</h1>
+        <h1 style="font-size:var(--fs-lg); margin:18px 0 30px; line-height:1.4;">${indicePregunta + 1}. ${p.texto}</h1>
         <div id="opciones"></div>
     `;
 
