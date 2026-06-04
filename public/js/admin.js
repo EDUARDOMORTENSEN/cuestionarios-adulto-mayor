@@ -324,7 +324,10 @@ async function cargarListaCuestionarios() {
 
         tbody.innerHTML += `
             <tr>
-                <td>${c.titulo}</td>
+                <td>
+                    <span id="titulo-texto-${c.id}">${c.titulo}</span>
+                    <button onclick="editarTitulo(${c.id})" style="background:none; border:none; cursor:pointer; font-size:14px; margin-left:6px; padding:0;" title="Editar título">✏️</button>
+                </td>
                 <td>${badge}</td>
                 <td>${fecha}</td>
                 <td>
@@ -345,6 +348,57 @@ async function cargarListaCuestionarios() {
                 </td>
             </tr>`;
     });
+}
+
+async function editarTitulo(id) {
+    const span = document.getElementById(`titulo-texto-${id}`);
+    const tituloActual = span.textContent;
+    const td = span.parentNode;
+    
+    td.innerHTML = `
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="text" id="input-edit-titulo-${id}" value="${tituloActual.replace(/"/g, '&quot;')}" style="padding: 4px 8px; border: 1px solid var(--azul-principal); border-radius: 4px; font-size: 14px; width: 100%;">
+            <button class="btn btn-green" onclick="guardarNuevoTitulo(${id})" style="padding: 4px 8px; font-size: 12px; min-width: 28px;">✓</button>
+            <button class="btn btn-red" onclick="cargarListaCuestionarios()" style="padding: 4px 8px; font-size: 12px; background: #999; min-width: 28px;">✕</button>
+        </div>
+    `;
+    const input = document.getElementById(`input-edit-titulo-${id}`);
+    input.focus();
+    input.select();
+    
+    input.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            await guardarNuevoTitulo(id);
+        } else if (e.key === 'Escape') {
+            cargarListaCuestionarios();
+        }
+    });
+}
+
+async function guardarNuevoTitulo(id) {
+    const input = document.getElementById(`input-edit-titulo-${id}`);
+    const nuevoTitulo = input.value.trim();
+    if (!nuevoTitulo) {
+        toast('⚠️ El título no puede estar vacío.');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/cuestionarios/${id}/titulo`, {
+            method: 'PATCH',
+            headers: headers(),
+            body: JSON.stringify({ titulo: nuevoTitulo })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            toast('Error: ' + data.error);
+            return;
+        }
+        toast('✅ Título actualizado.');
+        cargarListaCuestionarios();
+    } catch (e) {
+        toast('Error al actualizar el título.');
+    }
 }
 
 async function toggleActivo(id, estado) {

@@ -209,6 +209,22 @@ app.patch('/api/cuestionarios/:id/activo', requireAdmin, async (req, res) => {
     res.json({ activo: c.activo });
 });
 
+// PATCH /api/cuestionarios/:id/titulo — editar título del cuestionario
+app.patch('/api/cuestionarios/:id/titulo', requireAdmin, async (req, res) => {
+    try {
+        const c = await Cuestionario.findByPk(req.params.id);
+        if (!c) return res.status(404).json({ error: 'No encontrado.' });
+        if (!req.body.titulo || !req.body.titulo.trim()) {
+            return res.status(400).json({ error: 'El título no puede estar vacío.' });
+        }
+        await c.update({ titulo: req.body.titulo.trim() });
+        res.json({ titulo: c.titulo });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
 // ============================================================
 // RUTAS: CUESTIONARIO PÚBLICO (sin auth — acceso por link_token)
 // ============================================================
