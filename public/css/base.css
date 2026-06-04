@@ -520,3 +520,6 @@ p { margin-bottom: 0.6em; }
     box-shadow: 0 0 0 4px rgba(26,86,160,0.15);
 }
 
+.opcion-btn.sin-negrita {
+    font-weight: normal !important;
+}

@@ -3,43 +3,43 @@
    Sistema de Cuestionarios v4 — Con métricas, CSV y consentimiento
    ============================================================ */
 
-const params    = new URLSearchParams(location.search);
+const params = new URLSearchParams(location.search);
 const linkToken = params.get('c');
 
-let cuestionario   = null;
+let cuestionario = null;
 let indicePregunta = 0;
 
-let fase          = 'BIENVENIDA';
-let usuarioEdad   = null;
-let usuarioSexo   = null;
+let fase = 'BIENVENIDA';
+let usuarioEdad = null;
+let usuarioSexo = null;
 let usuarioNombre = 'Participante';
 
 /* ── Módulo de Tiempo ────────────────────────────────────────
    Registra hora de inicio total y por pregunta.
    ─────────────────────────────────────────────────────────── */
 const Tiempo = (() => {
-    let horaInicio    = null;
-    let horaFin       = null;
+    let horaInicio = null;
+    let horaFin = null;
     let inicioPregunta = null;
 
     return {
-        iniciar()       { horaInicio = new Date(); },
-        terminar()      { horaFin   = new Date(); },
+        iniciar() { horaInicio = new Date(); },
+        terminar() { horaFin = new Date(); },
         iniciarPregunta() { inicioPregunta = Date.now(); },
-        tiempoPregunta()  {
+        tiempoPregunta() {
             if (!inicioPregunta) return 0;
             return Math.round((Date.now() - inicioPregunta) / 1000); // segundos
         },
         horaInicioStr() { return horaInicio ? _formatHora(horaInicio) : '--'; },
-        horaFinStr()    { return horaFin    ? _formatHora(horaFin)    : '--'; },
-        duracionStr()   {
+        horaFinStr() { return horaFin ? _formatHora(horaFin) : '--'; },
+        duracionStr() {
             if (!horaInicio || !horaFin) return '--';
             const seg = Math.round((horaFin - horaInicio) / 1000);
-            const m   = Math.floor(seg / 60);
-            const s   = seg % 60;
+            const m = Math.floor(seg / 60);
+            const s = seg % 60;
             return m > 0 ? `${m} min ${s} seg` : `${s} seg`;
         },
-        fechaStr()      { return horaInicio ? _formatFecha(horaInicio) : '--'; }
+        fechaStr() { return horaInicio ? _formatFecha(horaInicio) : '--'; }
     };
 
     function _formatHora(d) {
@@ -60,13 +60,13 @@ const MatrizRespuestas = (() => {
         agregar(pregunta, respuesta, fase, tiempoSeg) {
             _datos.push([pregunta, respuesta, fase, tiempoSeg]);
         },
-        obtenerTodo()    { return [..._datos]; },
-        comoObjetos()    {
+        obtenerTodo() { return [..._datos]; },
+        comoObjetos() {
             return _datos.map(([pregunta, respuesta, fase, tiempo_respuesta]) =>
                 ({ pregunta, respuesta, fase, tiempo_respuesta }));
         },
-        limpiar()        { _datos.length = 0; },
-        longitud()       { return _datos.length; }
+        limpiar() { _datos.length = 0; },
+        longitud() { return _datos.length; }
     };
 })();
 
@@ -109,11 +109,11 @@ const CSV = (() => {
 
         descargar(contenido, nombreArchivo) {
             // BOM para que Excel en español abra bien con tildes
-            const bom  = '\uFEFF';
+            const bom = '\uFEFF';
             const blob = new Blob([bom + contenido], { type: 'text/csv;charset=utf-8;' });
-            const url  = URL.createObjectURL(blob);
-            const a    = document.createElement('a');
-            a.href     = url;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
             a.download = nombreArchivo;
             document.body.appendChild(a);
             a.click();
@@ -181,7 +181,7 @@ function flujo() {
             } else {
                 const tieneLikert = preguntas.encuesta && preguntas.encuesta.likert && preguntas.encuesta.likert.length;
                 const tieneAbiertas = preguntas.encuesta && preguntas.encuesta.abiertas && preguntas.encuesta.abiertas.length;
-                
+
                 if (tieneLikert) {
                     fase = 'ENCUESTA_LIKERT';
                 } else if (tieneAbiertas) {
@@ -217,10 +217,10 @@ function flujo() {
 /* ── 1. Pantalla de Bienvenida con Consentimiento ─────────── */
 function mostrarBienvenida() {
     // Estimamos el total de preguntas para el tiempo estimado
-    const nAntes  = cuestionario.preguntas?.antes?.length  || 0;
+    const nAntes = cuestionario.preguntas?.antes?.length || 0;
     const nDespues = cuestionario.preguntas?.despues?.length || 0;
-    const totalP   = nAntes + nDespues;
-    const minEst   = Math.max(5, Math.ceil(totalP * 0.5 + 3)); // aprox
+    const totalP = nAntes + nDespues;
+    const minEst = Math.max(5, Math.ceil(totalP * 0.5 + 3)); // aprox
 
     app.innerHTML = `
         <span style="font-size:72px; display:block; margin-bottom:16px;"></span>
@@ -280,17 +280,17 @@ function mostrarBienvenida() {
 }
 
 function toggleConsentimiento() {
-    const check  = document.getElementById('checkConsentimiento');
-    const btn    = document.getElementById('btnIniciar');
+    const check = document.getElementById('checkConsentimiento');
+    const btn = document.getElementById('btnIniciar');
     consentimientoAceptado = check.checked;
 
     if (consentimientoAceptado) {
         btn.style.opacity = '1';
-        btn.style.cursor  = 'pointer';
+        btn.style.cursor = 'pointer';
         document.getElementById('errorConsentimiento').style.display = 'none';
     } else {
         btn.style.opacity = '0.45';
-        btn.style.cursor  = 'not-allowed';
+        btn.style.cursor = 'not-allowed';
     }
 }
 
@@ -343,8 +343,8 @@ function mostrarDemograficos() {
 }
 
 function validarDemograficos() {
-    const edad   = parseInt(document.getElementById('inputEdad').value);
-    const sexo   = document.getElementById('selectSexo').value;
+    const edad = parseInt(document.getElementById('inputEdad').value);
+    const sexo = document.getElementById('selectSexo').value;
     const nombre = document.getElementById('inputNombre').value.trim();
     const errorTxt = document.getElementById('errorEdad');
 
@@ -357,14 +357,14 @@ function validarDemograficos() {
         return;
     }
     errorTxt.style.display = 'none';
-    usuarioEdad  = edad;
-    usuarioSexo  = sexo;
+    usuarioEdad = edad;
+    usuarioSexo = sexo;
     if (nombre) usuarioNombre = nombre;
     avanzarFase('INSTRUCCIONES');
 }
 
 function mostrarInstrucciones() {
-    const nAntes   = cuestionario.preguntas?.antes?.length  || 0;
+    const nAntes = cuestionario.preguntas?.antes?.length || 0;
     const nDespues = cuestionario.preguntas?.despues?.length || 0;
     const tieneEncuesta = cuestionario.preguntas?.encuesta && (
         (cuestionario.preguntas.encuesta.likert && cuestionario.preguntas.encuesta.likert.length) ||
@@ -436,7 +436,7 @@ function mostrarPregunta(p, total, faseLbl) {
     // Iniciar cronómetro de pregunta
     Tiempo.iniciarPregunta();
 
-    const pct      = Math.round((indicePregunta / total) * 100);
+    const pct = Math.round((indicePregunta / total) * 100);
     const etiqueta = faseLbl === 'ANTES' ? 'Antes del video' : 'Después del video';
 
     app.innerHTML = `
@@ -450,11 +450,12 @@ function mostrarPregunta(p, total, faseLbl) {
     `;
 
     const cont = document.getElementById('opciones');
-    p.opciones.forEach(opt => {
-        const btn       = document.createElement('button');
-        btn.className   = 'opcion-btn';
-        btn.textContent = opt;
-        btn.onclick     = () => registrar(p.texto, opt, faseLbl);
+    p.opciones.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'opcion-btn sin-negrita';
+        const letra = String.fromCharCode(65 + idx); // A, B, C, D, etc.
+        btn.textContent = `${letra}) ${opt}`;
+        btn.onclick = () => registrar(p.texto, opt, faseLbl);
         cont.appendChild(btn);
     });
 }
@@ -482,7 +483,7 @@ function mostrarVideo() {
 
 /* ── Helper de Navegación ───────────────────────────────────── */
 function avanzarFase(nuevaFase) {
-    fase           = nuevaFase;
+    fase = nuevaFase;
     indicePregunta = 0;
     flujo();
 }
@@ -499,19 +500,19 @@ async function finalizarPrueba() {
 
     try {
         const res = await fetch(`/api/c/${linkToken}/responder`, {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({
+            body: JSON.stringify({
                 nombreUsuario: usuarioNombre,
-                edad:          usuarioEdad,
-                sexo:          usuarioSexo,
-                respuestas:    respuestasParaAPI,
+                edad: usuarioEdad,
+                sexo: usuarioSexo,
+                respuestas: respuestasParaAPI,
                 // Metadatos extra (el servidor los ignora si no está preparado, pero no rompe nada)
                 meta: {
-                    fecha:        Tiempo.fechaStr(),
-                    hora_inicio:  Tiempo.horaInicioStr(),
-                    hora_fin:     Tiempo.horaFinStr(),
-                    duracion:     Tiempo.duracionStr(),
+                    fecha: Tiempo.fechaStr(),
+                    hora_inicio: Tiempo.horaInicioStr(),
+                    hora_fin: Tiempo.horaFinStr(),
+                    duracion: Tiempo.duracionStr(),
                     consentimiento: consentimientoAceptado
                 }
             })
@@ -519,15 +520,15 @@ async function finalizarPrueba() {
 
         if (res.ok) {
             // Generar y descargar CSV automáticamente
-           /* const csvContent = CSV.generar(
-                usuarioNombre,
-                usuarioEdad,
-                usuarioSexo,
-                consentimientoAceptado,
-                MatrizRespuestas.obtenerTodo()
-            );
-            const nombreCSV = `resultado_${usuarioNombre.replace(/\s+/g,'_')}_${Tiempo.fechaStr()}.csv`;
-            CSV.descargar(csvContent, nombreCSV);*/
+            /* const csvContent = CSV.generar(
+                 usuarioNombre,
+                 usuarioEdad,
+                 usuarioSexo,
+                 consentimientoAceptado,
+                 MatrizRespuestas.obtenerTodo()
+             );
+             const nombreCSV = `resultado_${usuarioNombre.replace(/\s+/g,'_')}_${Tiempo.fechaStr()}.csv`;
+             CSV.descargar(csvContent, nombreCSV);*/
 
             mostrarFinal();
         } else {
