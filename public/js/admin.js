@@ -6,6 +6,13 @@
 let resultadosCache = [];
 let contadorPreguntas = 0;
 
+/* ── Escape HTML (datos de la BD pueden venir de un participante) ── */
+function esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 /* ── Helpers de auth ────────────────────────────────────────── */
 function headers() {
     return {
@@ -325,16 +332,15 @@ async function cargarListaCuestionarios() {
         tbody.innerHTML += `
             <tr>
                 <td>
-                    <span id="titulo-texto-${c.id}">${c.titulo}</span>
+                    <span id="titulo-texto-${c.id}">${esc(c.titulo)}</span>
                     <button onclick="editarTitulo(${c.id})" style="background:none; border:none; cursor:pointer; font-size:14px; margin-left:6px; padding:0;" title="Editar título">✏️</button>
                 </td>
                 <td>${badge}</td>
                 <td>${fecha}</td>
                 <td>
                     <input style="width:260px;padding:7px 10px;border:1px solid #cdd6e8;border-radius:7px;font-size:16px;color:var(--azul-principal)"
-                           value="${link}" readonly onclick="this.select()">
-                    <button class="btn btn-gray" style="margin-left:6px"
-                            onclick="navigator.clipboard.writeText('${link}').then(()=>toast('📋 Copiado'))">
+                           value="${esc(link)}" readonly onclick="this.select()">
+                    <button class="btn btn-gray btn-copiar-link" style="margin-left:6px" data-link="${esc(link)}">
                         Copiar
                     </button>
                 </td>
@@ -441,8 +447,8 @@ async function cargarResultados() {
         tbody.innerHTML += `
             <tr>
                 <td style="white-space:nowrap">${fecha}</td>
-                <td>${titulo}</td>
-                <td style="font-weight:700;color:var(--texto)">${r.nombreUsuario}</td>
+                <td>${esc(titulo)}</td>
+                <td style="font-weight:700;color:var(--texto)">${esc(r.nombreUsuario)}</td>
                 <td>${edad}</td>
                 <td style="white-space:nowrap">
                     <button class="btn btn-blue" style="margin-right:6px"
@@ -462,15 +468,15 @@ function verDetalleResultado(id) {
     const modal    = document.getElementById('modalResultados');
     const body     = document.getElementById('modalBody');
     const respuestas = Array.isArray(registro.respuestas) ? registro.respuestas : [];
-    const antes    = respuestas.filter(x => x.fase.toLowerCase() === 'antes');
-    const despues  = respuestas.filter(x => x.fase.toLowerCase() === 'despues');
-    const encuesta = respuestas.filter(x => x.fase.toLowerCase() === 'encuesta');
+    const antes    = respuestas.filter(x => (x.fase || '').toLowerCase() === 'antes');
+    const despues  = respuestas.filter(x => (x.fase || '').toLowerCase() === 'despues');
+    const encuesta = respuestas.filter(x => (x.fase || '').toLowerCase() === 'encuesta');
 
     let html = `
         <div class="meta-usuario">
-            <div class="meta-item"><b>Participante:</b> ${registro.nombreUsuario}</div>
+            <div class="meta-item"><b>Participante:</b> ${esc(registro.nombreUsuario)}</div>
             <div class="meta-item"><b>Edad:</b> ${registro.edad || '—'} años</div>
-            <div class="meta-item"><b>Actividad:</b> ${registro.Cuestionario ? registro.Cuestionario.titulo : '—'}</div>
+            <div class="meta-item"><b>Actividad:</b> ${esc(registro.Cuestionario ? registro.Cuestionario.titulo : '—')}</div>
         </div>
     `;
 
@@ -480,8 +486,8 @@ function verDetalleResultado(id) {
     if (antes.length) {
         antes.forEach(r => {
             html += `<div class="res-item">
-                <div class="res-pregunta">${r.pregunta}</div>
-                <div>Respuesta: <span class="res-respuesta">${r.respuesta}</span></div>
+                <div class="res-pregunta">${esc(r.pregunta)}</div>
+                <div>Respuesta: <span class="res-respuesta">${esc(r.respuesta)}</span></div>
             </div>`;
         });
     } else {
@@ -495,8 +501,8 @@ function verDetalleResultado(id) {
     if (despues.length) {
         despues.forEach(r => {
             html += `<div class="res-item">
-                <div class="res-pregunta">${r.pregunta}</div>
-                <div>Respuesta: <span class="res-respuesta">${r.respuesta}</span></div>
+                <div class="res-pregunta">${esc(r.pregunta)}</div>
+                <div>Respuesta: <span class="res-respuesta">${esc(r.respuesta)}</span></div>
             </div>`;
         });
     } else {
@@ -510,8 +516,8 @@ function verDetalleResultado(id) {
     if (encuesta.length) {
         encuesta.forEach(r => {
             html += `<div class="res-item">
-                <div class="res-pregunta">${r.pregunta}</div>
-                <div>Respuesta: <span class="res-respuesta">${r.respuesta}</span></div>
+                <div class="res-pregunta">${esc(r.pregunta)}</div>
+                <div>Respuesta: <span class="res-respuesta">${esc(r.respuesta)}</span></div>
             </div>`;
         });
     } else {
@@ -553,6 +559,15 @@ function toast(msg) {
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 3200);
 }
+
+/* ── Copiar link (delegado, evita interpolar datos en atributos onclick) ── */
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-copiar-link');
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.link)
+        .then(() => toast('📋 Enlace copiado al portapapeles.'))
+        .catch(() => toast('Selecciona el enlace y cópialo manualmente.'));
+});
 
 /* ── Inicio ─────────────────────────────────────────────────── */
 verificarAuth();

@@ -1,0 +1,15 @@
+# Se aplica automáticamente en local (docker compose lee este archivo
+# además de docker-compose.yml si existe). Construye la imagen desde el
+# Dockerfile en vez de bajarla de GHCR. NO copiar este archivo al VPS:
+# ahí solo van docker-compose.yml + .env, para que siempre corra la
+# imagen publicada por CI.
+services:
+  app:
+    build:
+      context: .
+    image: cuestionarios-adulto-mayor:local
+  db:
+    # Solo para inspeccionar la base con un cliente local (TablePlus, psql, etc.)
+    # durante desarrollo. 5433 porque el 5432 del host ya lo usa otro Postgres.
+    ports:
+      - '127.0.0.1:5433:5432'

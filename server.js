@@ -1,31 +1,55 @@
-
-
 const express = require('express');
 const { Sequelize, DataTypes, Op } = require('sequelize');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-require('dotenv').config(); // Al inicio del archivo
+require('dotenv').config();
+
+const PORT = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
 
 const app = express();
+
+// Detrás de cloudflared/un reverse proxy: necesario para que express-rate-limit
+// use la IP real del cliente (X-Forwarded-For) y no la del túnel.
+app.set('trust proxy', 1);
+
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            // El HTML existente usa atributos onclick="..." por todas partes;
+            // quitarlos es un refactor aparte. El escape de datos (ver admin.js)
+            // es la mitigación real, esto es defensa en profundidad.
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:'],
+            frameSrc: ['https://www.youtube.com', 'https://www.youtube-nocookie.com'],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"]
+        }
+    }
+}));
 app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+app.use(express.json({ limit: '1mb' }));
 
 // ============================================================
-// CONEXIÓN (Modificada para Producción)
+// CONEXIÓN
 // ============================================================
-// Si existe la variable en la nube, la usa; si no, usa tu local de Docker
-const urlConexion = process.env.DATABASE_URL || 'postgres://admin_user:super_password123@localhost:5432/cuestionarios_db';
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+    console.error('❌ Falta la variable de entorno DATABASE_URL.');
+    process.exit(1);
+}
 
-const sequelize = new Sequelize(urlConexion, {
+const sequelize = new Sequelize(DATABASE_URL, {
     dialect: 'postgres',
     logging: false,
-    // Render requiere SSL para conexiones seguras a la base de datos
-    dialectOptions: (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1')) ? {
-        ssl: {
-            require: true,
-            rejectUnauthorized: false // Evita problemas de certificados en Render
-        }
+    dialectOptions: process.env.DB_SSL === 'true' ? {
+        ssl: { require: true, rejectUnauthorized: false }
     } : {}
 });
 
@@ -38,7 +62,7 @@ const Admin = sequelize.define('Admin', {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     nombre:        { type: DataTypes.STRING(100), allowNull: false },
     email:         { type: DataTypes.STRING(150), allowNull: false, unique: true },
-    password_hash: { type: DataTypes.STRING(64), allowNull: false }  // SHA-256 hex
+    password_hash: { type: DataTypes.STRING(255), allowNull: false }  // bcrypt
 }, { tableName: 'admins' });
 
 // TABLA: sesiones_admin  — tokens activos del administrador
@@ -86,7 +110,12 @@ Resultado.belongsTo(Cuestionario, { foreignKey: 'cuestionario_id' });
 // ============================================================
 // HELPERS
 // ============================================================
-const sha256 = (txt) => crypto.createHash('sha256').update(txt).digest('hex');
+const hashPassword = (pw) => bcrypt.hash(pw, 12);
+const verifyPassword = (pw, hash) => bcrypt.compare(pw, hash);
+// Hash "señuelo" para comparar contra él cuando el email no existe:
+// evita que el tiempo de respuesta delate si una cuenta existe o no.
+const HASH_SENUELO = '$2a$12$C6UzMDM.H6dfI/f/IKcEeOFRV6l8Xw9lE0lqYs4Y5G8lJ5t3XoW9G';
+
 const genToken = () => crypto.randomBytes(32).toString('hex');
 
 async function verificarSesion(req) {
@@ -106,36 +135,114 @@ async function requireAdmin(req, res, next) {
 }
 
 // ============================================================
-// SYNC + SEED
+// VALIDACIÓN — endpoint público /api/c/:token/responder
 // ============================================================
-sequelize.sync({ alter: true })
-    .then(async () => {
-        console.log('✅ Tablas sincronizadas.');
-        const existe = await Admin.findOne({ where: { email: 'admin@sistema.com' } });
-        if (!existe) {
-            await Admin.create({
-                nombre: 'Administrador',
-                email: 'admin@sistema.com',
-                password_hash: sha256('admin123')
-            });
-            console.log('👤 Admin creado → admin@sistema.com / admin123');
+const SEXOS_VALIDOS = ['Masculino', 'Femenino', 'Otro'];
+
+function sanitizarMeta(meta) {
+    if (!meta || typeof meta !== 'object') return null;
+    const str = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '');
+    return {
+        fecha:          str(meta.fecha, 20),
+        hora_inicio:    str(meta.hora_inicio, 20),
+        hora_fin:       str(meta.hora_fin, 20),
+        duracion:       str(meta.duracion, 30),
+        consentimiento: meta.consentimiento === true
+    };
+}
+
+function limpiarRespuestas(lista) {
+    if (!Array.isArray(lista) || lista.length === 0 || lista.length > 200) return null;
+    const limpio = [];
+    for (const r of lista) {
+        if (!r || typeof r !== 'object') return null;
+        if (typeof r.pregunta !== 'string' || !r.pregunta.trim() || r.pregunta.length > 500) return null;
+        if (typeof r.respuesta !== 'string' || r.respuesta.length > 2000) return null;
+        if (typeof r.fase !== 'string' || !r.fase || r.fase.length > 30) return null;
+
+        const item = { pregunta: r.pregunta.trim(), respuesta: r.respuesta, fase: r.fase };
+        if (Number.isFinite(r.tiempo_respuesta)) {
+            item.tiempo_respuesta = Math.max(0, Math.min(100000, Math.round(r.tiempo_respuesta)));
         }
-    })
-    .catch(err => console.error('❌ Error DB:', err));
+        limpio.push(item);
+    }
+    return limpio;
+}
+
+function validarRespuestaPublica(body) {
+    const nombreUsuario = (typeof body.nombreUsuario === 'string' ? body.nombreUsuario.trim() : '')
+        .slice(0, 120) || 'Participante';
+
+    const edad = parseInt(body.edad, 10);
+    if (!Number.isInteger(edad) || edad < 18 || edad > 120) {
+        return { ok: false, error: 'Edad inválida.' };
+    }
+
+    if (!SEXOS_VALIDOS.includes(body.sexo)) {
+        return { ok: false, error: 'Sexo inválido.' };
+    }
+
+    const respuestas = limpiarRespuestas(body.respuestas);
+    if (!respuestas) {
+        return { ok: false, error: 'Formato de respuestas inválido.' };
+    }
+
+    return {
+        ok: true,
+        data: { nombreUsuario, edad, sexo: body.sexo, respuestas, meta: sanitizarMeta(body.meta) }
+    };
+}
+
+function esUrlVideoValida(url) {
+    if (typeof url !== 'string') return false;
+    try {
+        return new URL(url).protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+// ============================================================
+// RATE LIMITING
+// ============================================================
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiados intentos. Intente de nuevo en unos minutos.' }
+});
+
+const responderLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas solicitudes. Intente de nuevo más tarde.' }
+});
+
+// ============================================================
+// RAÍZ Y ARCHIVOS ESTÁTICOS
+// ============================================================
+app.get('/', (req, res) => res.redirect('/login.html'));
+app.use(express.static('public', { index: false }));
+
+app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
 
 // ============================================================
 // RUTAS: AUTH ADMIN
 // ============================================================
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password)
             return res.status(400).json({ error: 'Email y contraseña requeridos.' });
 
-        const admin = await Admin.findOne({ where: { email: email.toLowerCase().trim() } });
-        if (!admin || admin.password_hash !== sha256(password))
+        const admin = await Admin.findOne({ where: { email: String(email).toLowerCase().trim() } });
+        const coincide = await verifyPassword(password, admin ? admin.password_hash : HASH_SENUELO);
+        if (!admin || !coincide)
             return res.status(401).json({ error: 'Credenciales incorrectas.' });
 
         // Una sola sesión activa por admin
@@ -166,9 +273,18 @@ app.get('/api/auth/me', requireAdmin, (req, res) => {
 // PUT /api/auth/password  — cambiar contraseña del admin
 app.put('/api/auth/password', requireAdmin, async (req, res) => {
     const { passwordActual, passwordNuevo } = req.body;
-    if (req.admin.password_hash !== sha256(passwordActual))
-        return res.status(401).json({ error: 'Contraseña actual incorrecta.' });
-    await req.admin.update({ password_hash: sha256(passwordNuevo) });
+    if (typeof passwordNuevo !== 'string' || passwordNuevo.length < 8)
+        return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+
+    const ok = await verifyPassword(passwordActual || '', req.admin.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Contraseña actual incorrecta.' });
+
+    await req.admin.update({ password_hash: await hashPassword(passwordNuevo) });
+
+    // Invalida las demás sesiones (deja viva la que acaba de usarse para cambiarla)
+    const tokenActual = (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+    await SesionAdmin.destroy({ where: { admin_id: req.admin.id, token: { [Op.ne]: tokenActual } } });
+
     res.json({ message: 'Contraseña actualizada.' });
 });
 
@@ -179,7 +295,13 @@ app.put('/api/auth/password', requireAdmin, async (req, res) => {
 // POST /api/cuestionarios — crear cuestionario y obtener link
 app.post('/api/cuestionarios', requireAdmin, async (req, res) => {
     try {
-        const nuevo = await Cuestionario.create(req.body);
+        const { titulo, videoUrl, preguntas } = req.body;
+        if (!titulo || !String(titulo).trim())
+            return res.status(400).json({ error: 'El título es obligatorio.' });
+        if (!esUrlVideoValida(videoUrl))
+            return res.status(400).json({ error: 'La URL del video debe ser una dirección https válida.' });
+
+        const nuevo = await Cuestionario.create({ titulo: String(titulo).trim(), videoUrl, preguntas });
         res.json(nuevo);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -224,7 +346,6 @@ app.patch('/api/cuestionarios/:id/titulo', requireAdmin, async (req, res) => {
     }
 });
 
-
 // ============================================================
 // RUTAS: CUESTIONARIO PÚBLICO (sin auth — acceso por link_token)
 // ============================================================
@@ -239,20 +360,19 @@ app.get('/api/c/:token', async (req, res) => {
 });
 
 // POST /api/c/:token/responder — el participante envía sus respuestas
-app.post('/api/c/:token/responder', async (req, res) => {
+app.post('/api/c/:token/responder', responderLimiter, async (req, res) => {
     try {
         const c = await Cuestionario.findOne({
             where: { link_token: req.params.token, activo: true }
         });
         if (!c) return res.status(404).json({ error: 'Cuestionario no disponible.' });
 
+        const validacion = validarRespuestaPublica(req.body || {});
+        if (!validacion.ok) return res.status(400).json({ error: validacion.error });
+
         const resultado = await Resultado.create({
-            nombreUsuario: req.body.nombreUsuario || 'Participante',
-            edad: req.body.edad,
-            sexo: req.body.sexo,
-            respuestas: req.body.respuestas,
-            cuestionario_id: c.id,
-            meta: req.body.meta || null   // Guarda tiempos y consentimiento (v4)
+            ...validacion.data,
+            cuestionario_id: c.id
         });
         res.json(resultado);
     } catch (e) {
@@ -282,10 +402,6 @@ app.delete('/api/resultados/:id', requireAdmin, async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
-
-// ============================================================
-const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
 
 // ============================================================
 // RUTA: EXPORTAR CSV COMPLETO — ADMIN (v4)
@@ -344,7 +460,7 @@ app.get('/api/resultados-admin/csv', requireAdmin, async (req, res) => {
             }
         }
 
-        const BOM     = '\uFEFF';
+        const BOM     = '﻿';
         const csvBody = [encabezados.join(','), ...filas].join('\r\n');
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -355,3 +471,37 @@ app.get('/api/resultados-admin/csv', requireAdmin, async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
+// ============================================================
+// SYNC + SEED + ARRANQUE
+// ============================================================
+async function iniciar() {
+    try {
+        await sequelize.authenticate();
+        await sequelize.sync(isProd ? {} : { alter: true });
+        console.log('✅ Tablas sincronizadas.');
+
+        const existeAdmin = await Admin.findOne();
+        if (!existeAdmin) {
+            const email = process.env.ADMIN_EMAIL;
+            const password = process.env.ADMIN_PASSWORD;
+            if (!email || !password) {
+                console.error('❌ No hay ningún admin en la base y faltan ADMIN_EMAIL / ADMIN_PASSWORD en el entorno.');
+                process.exit(1);
+            }
+            await Admin.create({
+                nombre: 'Administrador',
+                email: email.toLowerCase().trim(),
+                password_hash: await hashPassword(password)
+            });
+            console.log(`👤 Admin creado → ${email}`);
+        }
+
+        app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+    } catch (err) {
+        console.error('❌ Error al iniciar:', err);
+        process.exit(1);
+    }
+}
+
+iniciar();
