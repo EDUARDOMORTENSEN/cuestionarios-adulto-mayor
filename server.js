@@ -23,11 +23,15 @@ app.use(helmet({
             // El HTML existente usa atributos onclick="..." por todas partes;
             // quitarlos es un refactor aparte. El escape de datos (ver admin.js)
             // es la mitigación real, esto es defensa en profundidad.
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            // CSP nivel 3 trata los atributos onclick="..." (script-src-attr)
+            // como una directiva separada de los <script> inline (script-src);
+            // Helmet la pone en 'none' por defecto si no se especifica.
+            scriptSrc: ["'self'", "'unsafe-inline'", 'https://static.cloudflareinsights.com'],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", 'data:'],
             frameSrc: ['https://www.youtube.com', 'https://www.youtube-nocookie.com'],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", 'https://cloudflareinsights.com'],
             objectSrc: ["'none'"],
             baseUri: ["'self'"]
         }
